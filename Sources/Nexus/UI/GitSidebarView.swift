@@ -156,7 +156,7 @@ struct IconButton: View {
     }
 }
 
-private struct SectionHeaderRow<Accessory: View>: View {
+struct SectionHeaderRow<Accessory: View>: View {
     let title: String
     @ViewBuilder var accessory: () -> Accessory
 

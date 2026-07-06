@@ -10,7 +10,7 @@ struct TabBarView: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            IconButton(system: "sidebar.left", active: sidebarVisible, help: "Toggle git sidebar", action: onToggleSidebar)
+            IconButton(system: "sidebar.left", active: sidebarVisible, help: "Toggle sidebar", action: onToggleSidebar)
 
             Rectangle().fill(palette.hairline).frame(width: 1, height: 16).padding(.horizontal, 2)
 

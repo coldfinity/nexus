@@ -28,9 +28,13 @@ public final class Pane: Identifiable {
     /// shell's lifetime is tied to this pane rather than to SwiftUI view churn.
     @ObservationIgnored private var _controller: TerminalController?
 
-    public init(id: UUID = UUID(), startDirectory: String? = nil) {
+    /// A command to run once the shell is ready (e.g. `claude --resume <id>`).
+    @ObservationIgnored public let pendingCommand: String?
+
+    public init(id: UUID = UUID(), startDirectory: String? = nil, pendingCommand: String? = nil) {
         self.id = id
         self.startDirectory = startDirectory
+        self.pendingCommand = pendingCommand
     }
 
     /// Get-or-create the terminal controller for this pane.
@@ -48,6 +52,11 @@ public final class Pane: Identifiable {
             return cwd
         }
         return currentDirectory ?? startDirectory
+    }
+
+    /// The PID of the shell process (0 if not yet started).
+    public var shellPid: pid_t {
+        _controller?.shellPid ?? 0
     }
 
     /// Terminate the shell when the pane is closed, so no orphan process lingers.

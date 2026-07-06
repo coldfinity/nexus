@@ -35,6 +35,14 @@ final class TerminalController: NSObject, @preconcurrency LocalProcessTerminalVi
         guard !started else { return }
         started = true
         SessionLauncher.start(in: view, directory: directory)
+
+        // Run the pane's pending command once the shell has had a moment to
+        // print its prompt (e.g. resuming a Claude Code session).
+        if let command = pane?.pendingCommand {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak view] in
+                view?.send(txt: command + "\n")
+            }
+        }
     }
 
     /// Re-spawn after the shell exited (bound to the restart affordance).

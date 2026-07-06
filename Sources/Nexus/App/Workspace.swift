@@ -57,8 +57,8 @@ public final class Workspace {
         newTab(directory: focusedPane?.resolvedWorkingDirectory() ?? Self.homeDirectory)
     }
 
-    public func newTab(directory: String) {
-        let pane = Pane(startDirectory: directory)
+    public func newTab(directory: String, command: String? = nil) {
+        let pane = Pane(startDirectory: directory, pendingCommand: command)
         let tab = TerminalTab(rootPaneID: pane.id)
         panes[pane.id] = pane
         tabs.append(tab)

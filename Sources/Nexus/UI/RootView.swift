@@ -1,12 +1,14 @@
 import SwiftUI
 import AppKit
 
-/// The window's content: an optional git sidebar alongside the tab bar and the
-/// selected tab's pane tree.
+/// The window's content: an optional sidebar (git or agent) alongside the tab
+/// bar and the selected tab's pane tree.
 struct RootView: View {
     let workspace: Workspace
     let configStore: ConfigStore
     let gitStore: GitStore
+    let agentStore: AgentStore
+    let claudeStore: ClaudeCodeStore
     let uiState: AppUIState
 
     /// Live width while dragging; nil otherwise (falls back to the saved config).
@@ -59,8 +61,14 @@ struct RootView: View {
             }
 
             HStack(spacing: 0) {
-                if uiState.showGitSidebar {
-                    GitSidebarView(gitStore: gitStore, workspace: workspace)
+                if uiState.sidebarVisible {
+                    SidebarPanelView(
+                        uiState: uiState,
+                        gitStore: gitStore,
+                        agentStore: agentStore,
+                        claudeStore: claudeStore,
+                        workspace: workspace
+                    )
                         .frame(width: sidebarWidth)
                     sidebarResizeHandle
                 }
@@ -82,8 +90,8 @@ struct RootView: View {
 
                 TabBarView(
                     workspace: workspace,
-                    sidebarVisible: uiState.showGitSidebar,
-                    onToggleSidebar: uiState.toggleGitSidebar
+                    sidebarVisible: uiState.sidebarVisible,
+                    onToggleSidebar: uiState.toggleSidebar
                 )
 
                 if let tab = workspace.selectedTab {
@@ -109,9 +117,77 @@ struct RootView: View {
     /// Keep the sidebar pointed at the focused pane's live working directory.
     private func trackWorkingDirectory() async {
         while !Task.isCancelled {
-            gitStore.update(directory: workspace.focusedPane?.resolvedWorkingDirectory())
+            let cwd = workspace.focusedPane?.resolvedWorkingDirectory()
+            gitStore.update(directory: cwd)
+            agentStore.update(directory: cwd)
+            claudeStore.update(directory: cwd)
             try? await Task.sleep(for: .seconds(2))
         }
+    }
+}
+
+/// A two-tab sidebar panel that switches between the git and agent views.
+private struct SidebarPanelView: View {
+    @Environment(\.palette) private var palette
+    let uiState: AppUIState
+    let gitStore: GitStore
+    let agentStore: AgentStore
+    let claudeStore: ClaudeCodeStore
+    let workspace: Workspace
+
+    var body: some View {
+        VStack(spacing: 0) {
+            SegmentedControl(
+                segments: SidebarTab.allCases.map { ($0, $0.rawValue.capitalized) },
+                selection: uiState.currentSidebarTab,
+                onSelect: { uiState.currentSidebarTab = $0 }
+            )
+            Rectangle().fill(palette.hairline).frame(height: 1)
+
+            switch uiState.currentSidebarTab {
+            case .git:
+                GitSidebarView(gitStore: gitStore, workspace: workspace)
+            case .agent:
+                AgentSidebarView(
+                    provider: uiState.agentProvider,
+                    onSelectProvider: { uiState.agentProvider = $0 },
+                    agentStore: agentStore,
+                    claudeStore: claudeStore,
+                    workspace: workspace
+                )
+            }
+        }
+    }
+}
+
+/// A reusable segmented control themed to the chrome.
+struct SegmentedControl<Value: Hashable>: View {
+    @Environment(\.palette) private var palette
+    let segments: [(Value, String)]
+    let selection: Value
+    let onSelect: (Value) -> Void
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(segments, id: \.0) { value, label in
+                let isSelected = value == selection
+                Button { onSelect(value) } label: {
+                    Text(label)
+                        .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                        .foregroundStyle(isSelected ? palette.textPrimary : palette.textTertiary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 24)
+                        .background(
+                            RoundedRectangle(cornerRadius: NX.rowRadius)
+                                .fill(isSelected ? palette.overlayStrong : .clear)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 6)
+        .frame(height: 34)
+        .background(palette.chromeRaised)
     }
 }
 

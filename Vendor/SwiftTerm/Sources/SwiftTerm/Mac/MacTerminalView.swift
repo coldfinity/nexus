@@ -2179,11 +2179,18 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
     }
     
     public override func scrollWheel(with event: NSEvent) {
-        if event.deltaY == 0 {
+        // [Nexus patch] Many mice (and precise trackpads) report motion in
+        // `scrollingDeltaY` while leaving the legacy `deltaY` at 0. Fall back to
+        // the precise delta so their scroll wheel isn't ignored.
+        var delta = event.deltaY
+        if delta == 0 {
+            delta = event.scrollingDeltaY
+        }
+        if delta == 0 {
             return
         }
-        let velocity = calcScrollingVelocity(delta: Int (abs (event.deltaY)))
-        if event.deltaY > 0 {
+        let velocity = calcScrollingVelocity(delta: max(1, Int(abs(delta))))
+        if delta > 0 {
             scrollUp (lines: velocity)
         } else {
             scrollDown(lines: velocity)

@@ -8,11 +8,13 @@ struct NexusApp: App {
     @State private var configStore = ConfigStore()
     @State private var workspace = Workspace()
     @State private var gitStore = GitStore()
+    @State private var agentStore = AgentStore()
+    @State private var claudeStore = ClaudeCodeStore()
     @State private var uiState = AppUIState()
 
     var body: some Scene {
         WindowGroup("Nexus") {
-            RootView(workspace: workspace, configStore: configStore, gitStore: gitStore, uiState: uiState)
+            RootView(workspace: workspace, configStore: configStore, gitStore: gitStore, agentStore: agentStore, claudeStore: claudeStore, uiState: uiState)
                 .onAppear {
                     // Closing the last pane closes the whole terminal.
                     workspace.onEmpty = {
@@ -40,8 +42,8 @@ struct NexusApp: App {
             }
 
             CommandMenu("View") {
-                Button(uiState.showGitSidebar ? "Hide Git Sidebar" : "Show Git Sidebar") {
-                    uiState.toggleGitSidebar()
+                Button(uiState.sidebarVisible ? "Hide Sidebar" : "Show Sidebar") {
+                    uiState.toggleSidebar()
                 }
                 .keyboardShortcut("g", modifiers: [.command, .shift])
 
