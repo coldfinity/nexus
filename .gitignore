@@ -1,0 +1,15 @@
+# SwiftPM build artifacts
+.build/
+.swiftpm/
+
+# Packaged app (produced by scripts/build-app.sh)
+Nexus.app/
+
+# macOS
+.DS_Store
+
+# Xcode user state
+*.xcuserstate
+xcuserdata/
+
+# Note: Vendor/ (SwiftTerm + Lua forks) is intentionally tracked.
