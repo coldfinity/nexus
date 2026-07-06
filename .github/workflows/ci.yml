@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build & Test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          swift --version
+          xcodebuild -version
+
+      # Vendored SwiftTerm + Lua build from source, so only the SwiftPM build
+      # products need caching (no network resolution happens).
+      - name: Cache build
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('Package.swift', 'Package.resolved') }}
+          restore-keys: ${{ runner.os }}-spm-
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test
+
+      - name: Package app bundle
+        run: ./scripts/build-app.sh release
+
+      - name: Upload Nexus.app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexus.app
+          path: Nexus.app
+          if-no-files-found: error
