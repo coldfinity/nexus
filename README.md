@@ -1,13 +1,14 @@
 # Nexus
 
-A native macOS terminal, built in SwiftUI, with a tiling layout, a Git sidebar, and a Lua config. It runs a real shell through [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) and themes the entire UI from whatever colors your terminal uses.
+A native macOS terminal, built in SwiftUI, with a tiling layout, Git and AI-agent sidebars, and a Lua config. It runs a real shell through [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) and themes the entire UI from whatever colors your terminal uses.
 
 > Requires macOS 14+.
 
 ## Features
 
 - **Tiling panes & tabs** — split any pane horizontally (⌘D) or vertically (⌘⇧D), nest arbitrarily, drag dividers to resize. Tabs with ⌘T; ⌘1–9 to switch.
-- **Git sidebar** — a live commit graph, branch list (click to check out), and a worktree manager (add / remove / open in a new tab). Click a commit for its full message, changed files, and diff. Toggle with ⌘⇧G; drag its edge to resize.
+- **Git sidebar** — a live commit graph, branch list (click to check out), and a worktree manager (add / remove / open in a new tab). Click a commit for its full message, changed files, and diff. Toggle the sidebar with ⌘⇧G; drag its edge to resize.
+- **AI agents** — a sidebar tab that lists your **opencode** and **Claude Code** sessions for the current folder — past or live — and resumes any of them in a new tab (or deletes it). A green dot marks a session that's actively running; switch providers with a segmented toggle.
 - **Themes** — 10 built in (One Dark, Dracula, Solarized Dark/Light, Nord, Gruvbox Dark, Tokyo Night, Rosé Pine, Black Metal (Venom), Monokai) or bring your own. The tab bar, sidebar, and accents all recolor to match — light or dark.
 - **Lua configuration** — a WezTerm-style `config.lua` with comments, variables, and logic. Hot-reloaded on save.
 - **Transparency & blur** — per-window opacity with an optional vibrancy backdrop; choose whether it applies to just the sidebar or the terminal too.
@@ -66,7 +67,7 @@ You can also edit everything from the **Settings** window (⌘,) — it writes b
 | Split right | ⌘D |
 | Split down | ⌘⇧D |
 | Switch to tab N | ⌘1–9 |
-| Toggle Git sidebar | ⌘⇧G |
+| Toggle sidebar (Git / Agents) | ⌘⇧G |
 | Toggle transparency | ⌥⌘T |
 | Toggle blur | ⌥⌘B |
 | Increase / decrease opacity | ⌥⌘= / ⌥⌘- |
