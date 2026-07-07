@@ -79,10 +79,37 @@ final class TerminalController: NSObject, @preconcurrency LocalProcessTerminalVi
 
         view.caretColor = HexColor.nsColor(theme.cursor, fallback: .white)
 
-        let size = CGFloat(config.font.size)
-        view.font = NSFont(name: config.font.family, size: size)
-            ?? NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
+        view.font = Self.makeFont(config.font)
         view.lineHeightMultiplier = CGFloat(config.font.lineHeight)
+    }
+
+    /// Resolve the terminal font by family + weight. Uses a font descriptor
+    /// (matching by family, so real family names like "SF Mono" or "JetBrains
+    /// Mono" work — `NSFont(name:)` does not), falling back to the monospaced
+    /// system font at the requested weight if the family isn't installed.
+    static func makeFont(_ font: FontConfig) -> NSFont {
+        let size = CGFloat(font.size)
+        let weight = weight(named: font.weight)
+        let descriptor = NSFontDescriptor(fontAttributes: [
+            .family: font.family,
+            .traits: [NSFontDescriptor.TraitKey.weight: weight.rawValue],
+        ])
+        return NSFont(descriptor: descriptor, size: size)
+            ?? NSFont.monospacedSystemFont(ofSize: size, weight: weight)
+    }
+
+    static func weight(named name: String) -> NSFont.Weight {
+        switch name.lowercased() {
+        case "thin": return .thin
+        case "ultralight", "ultra-light": return .ultraLight
+        case "light": return .light
+        case "medium": return .medium
+        case "semibold", "semi-bold": return .semibold
+        case "bold": return .bold
+        case "heavy": return .heavy
+        case "black": return .black
+        default: return .regular
+        }
     }
 
     @objc private func handleFocusClick() {

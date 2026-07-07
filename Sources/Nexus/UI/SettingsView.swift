@@ -43,6 +43,11 @@ struct SettingsView: View {
 
             Section("Font") {
                 TextField("Family", text: binding(\.font.family))
+                Picker("Weight", selection: binding(\.font.weight)) {
+                    ForEach(FontConfig.weightNames, id: \.self) { name in
+                        Text(name.capitalized).tag(name)
+                    }
+                }
                 sliderField("Size", value: binding(\.font.size), in: 8...28, step: 1, fractionDigits: 0)
                 sliderField("Line height", value: binding(\.font.lineHeight), in: 0.8...2.0, step: 0.05, fractionDigits: 2)
             }

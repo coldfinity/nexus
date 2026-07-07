@@ -71,6 +71,7 @@ enum LuaConfig {
 
         config.font.family = string(L, "font_family") ?? sub(L, "font") { string(L, "family") } ?? config.font.family
         config.font.size = number(L, "font_size") ?? sub(L, "font") { number(L, "size") } ?? config.font.size
+        config.font.weight = string(L, "font_weight") ?? sub(L, "font") { string(L, "weight") } ?? config.font.weight
         let lh = number(L, "line_height") ?? sub(L, "font") { number(L, "lineHeight") }
         config.font.lineHeight = clamp(lh, 0.8, 2.0) ?? config.font.lineHeight
 
@@ -190,6 +191,7 @@ enum LuaConfig {
         lines.append("-- Font")
         lines.append("config.font_family = \(quote(config.font.family))")
         lines.append("config.font_size = \(num(config.font.size))")
+        lines.append("config.font_weight = \(quote(config.font.weight))")
         lines.append("config.line_height = \(num(config.font.lineHeight))")
         lines.append("")
 

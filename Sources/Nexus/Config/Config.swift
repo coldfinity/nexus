@@ -94,11 +94,14 @@ public struct FontConfig: Codable, Equatable, Sendable {
     public var size: Double
     /// Line-height multiplier: 1.0 = the font's natural spacing.
     public var lineHeight: Double
+    /// Font weight name (thin, light, regular, medium, semibold, bold, …).
+    public var weight: String
 
-    public init(family: String = "SF Mono", size: Double = 13, lineHeight: Double = 1.0) {
+    public init(family: String = "SF Mono", size: Double = 13, lineHeight: Double = 1.0, weight: String = "regular") {
         self.family = family
         self.size = size
         self.lineHeight = lineHeight
+        self.weight = weight
     }
 
     public init(from decoder: Decoder) throws {
@@ -106,7 +109,11 @@ public struct FontConfig: Codable, Equatable, Sendable {
         family = try c.decodeIfPresent(String.self, forKey: .family) ?? "SF Mono"
         size = try c.decodeIfPresent(Double.self, forKey: .size) ?? 13
         lineHeight = try c.decodeIfPresent(Double.self, forKey: .lineHeight).map { min(max($0, 0.8), 2.0) } ?? 1.0
+        weight = try c.decodeIfPresent(String.self, forKey: .weight) ?? "regular"
     }
+
+    /// Weight names offered in Settings, in visual order.
+    public static let weightNames = ["thin", "light", "regular", "medium", "semibold", "bold", "heavy"]
 }
 
 public struct WindowConfig: Codable, Equatable, Sendable {
