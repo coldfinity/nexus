@@ -2,8 +2,9 @@
 .build/
 .swiftpm/
 
-# Packaged app (produced by scripts/build-app.sh)
+# Packaged app / installer (produced by scripts/*)
 Nexus.app/
+Nexus.dmg
 
 # macOS
 .DS_Store

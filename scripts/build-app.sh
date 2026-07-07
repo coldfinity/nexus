@@ -31,6 +31,13 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Nexus"
 
+# App icon (generate it with: swift scripts/make-icon.swift).
+ICON_KEY=""
+if [[ -f "$ROOT/Resources/AppIcon.icns" ]]; then
+    cp "$ROOT/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+    ICON_KEY='    <key>CFBundleIconFile</key>           <string>AppIcon</string>'
+fi
+
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -46,12 +53,21 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>LSMinimumSystemVersion</key>     <string>14.0</string>
     <key>NSHighResolutionCapable</key>    <true/>
     <key>LSApplicationCategoryType</key>  <string>public.app-category.developer-tools</string>
+$ICON_KEY
 </dict>
 </plist>
 PLIST
 
-# Ad-hoc code signature so macOS treats it as a stable app identity.
-codesign --force --sign - "$APP" >/dev/null 2>&1 || true
+# Sign. Default is an ad-hoc signature (fine for your own machine). For
+# distribution, pass a Developer ID:  SIGN_IDENTITY="Developer ID Application: You (TEAMID)"
+# which also enables the hardened runtime required for notarization.
+SIGN_IDENTITY="${SIGN_IDENTITY:--}"
+if [[ "$SIGN_IDENTITY" == "-" ]]; then
+    codesign --force --sign - "$APP" >/dev/null 2>&1 || true
+else
+    codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" "$APP"
+    echo "Signed with: $SIGN_IDENTITY"
+fi
 
 echo "Done: $APP"
 echo "Launch with:  open \"$APP\"    (or double-click it in Finder)"
