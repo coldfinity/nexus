@@ -54,7 +54,7 @@ struct SettingsView: View {
 
             Section("Window") {
                 sliderField("Padding", value: binding(\.padding), in: 0...40, step: 1, fractionDigits: 0)
-                sliderField("Opacity", value: binding(\.window.opacity), in: 0.3...1.0, step: 0.01, fractionDigits: 0, displayScale: 100, suffix: "%")
+                sliderField("Opacity", value: binding(\.window.opacity), in: 0.1...1.0, step: 0.01, fractionDigits: 0, displayScale: 100, suffix: "%")
                 Picker("Applies to", selection: binding(\.window.transparentTerminal)) {
                     Text("Sidebar only").tag(false)
                     Text("Sidebar & terminal").tag(true)

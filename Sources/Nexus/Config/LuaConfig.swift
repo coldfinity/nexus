@@ -76,7 +76,7 @@ enum LuaConfig {
         config.font.lineHeight = clamp(lh, 0.8, 2.0) ?? config.font.lineHeight
 
         let opacity = number(L, "opacity") ?? sub(L, "window") { number(L, "opacity") }
-        config.window.opacity = clamp(opacity, 0.2, 1.0) ?? config.window.opacity
+        config.window.opacity = clamp(opacity, 0.1, 1.0) ?? config.window.opacity
         config.window.blur = bool(L, "blur") ?? sub(L, "window") { bool(L, "blur") } ?? config.window.blur
         config.window.transparentTerminal = bool(L, "transparent_terminal")
             ?? sub(L, "window") { bool(L, "transparentTerminal") } ?? config.window.transparentTerminal

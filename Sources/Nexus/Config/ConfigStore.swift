@@ -114,7 +114,7 @@ public final class ConfigStore {
     /// Nudge the window opacity, clamped to a usable range.
     public func adjustOpacity(by delta: Double) {
         var updated = config
-        updated.window.opacity = min(max(config.window.opacity + delta, 0.3), 1.0)
+        updated.window.opacity = min(max(config.window.opacity + delta, 0.1), 1.0)
         save(updated)
     }
 

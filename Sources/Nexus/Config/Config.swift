@@ -133,7 +133,7 @@ public struct WindowConfig: Codable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        opacity = try c.decodeIfPresent(Double.self, forKey: .opacity).map { min(max($0, 0.2), 1.0) } ?? 1.0
+        opacity = try c.decodeIfPresent(Double.self, forKey: .opacity).map { min(max($0, 0.1), 1.0) } ?? 1.0
         blur = try c.decodeIfPresent(Bool.self, forKey: .blur) ?? false
         transparentTerminal = try c.decodeIfPresent(Bool.self, forKey: .transparentTerminal) ?? true
     }

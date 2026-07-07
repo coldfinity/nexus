@@ -53,13 +53,10 @@ struct RootView: View {
     }
 
     var body: some View {
-        ZStack {
-            // Window backdrop: frosted vibrancy when blur is on, otherwise the
-            // desktop shows through (in transparency mode) or the chrome is opaque.
-            if configStore.config.window.blur {
-                VisualEffectBackground().ignoresSafeArea()
-            }
-
+        // The window itself is made translucent + blurred by WindowConfigurator;
+        // the chrome and terminal panes paint their own (translucent) surfaces on
+        // top, so the blurred desktop shows through them.
+        Group {
             HStack(spacing: 0) {
                 if uiState.sidebarVisible {
                     SidebarPanelView(
