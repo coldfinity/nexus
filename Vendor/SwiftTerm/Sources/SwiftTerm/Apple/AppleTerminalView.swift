@@ -1367,8 +1367,11 @@ extension TerminalView {
             context.setShouldAntialias(true)
             context.setAllowsAntialiasing(true)
             #if os(macOS)
-            context.setShouldSmoothFonts(true)
-            context.setAllowsFontSmoothing(true)
+            // [Nexus patch] Disable font smoothing (keep antialiasing). macOS
+            // font smoothing thickens light-on-dark text, making the regular
+            // weight look bold — this is the "thin strokes" behaviour.
+            context.setShouldSmoothFonts(false)
+            context.setAllowsFontSmoothing(false)
             #endif
 
             // Glyph drawing loop — reuses cached CTLines
