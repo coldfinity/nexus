@@ -69,11 +69,11 @@ private struct OpencodeContent: View {
             header
 
             if !store.hasStorage {
-                AgentPlaceholder(icon: "terminal", title: "opencode not found",
-                                 detail: "Run `opencode` to create your first session.")
+                AgentPlaceholder(icon: "terminal", title: "opencode isn't set up yet",
+                                 detail: "Run `opencode` in a project to get started.")
             } else if store.sessions.isEmpty {
-                AgentPlaceholder(icon: "bubble.left", title: "No sessions",
-                                 detail: "No opencode sessions in this directory yet.")
+                AgentPlaceholder(icon: "bubble.left", title: "No sessions here",
+                                 detail: "Run `opencode` in this folder to start one.")
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -102,17 +102,13 @@ private struct OpencodeContent: View {
     }
 
     private var header: some View {
-        HStack(spacing: 8) {
-            Icon(name: "terminal", size: 12).foregroundStyle(palette.accent)
-            Text("opencode")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(palette.textPrimary)
-            Spacer(minLength: 4)
-            if store.isLoading { ProgressView().controlSize(.small).scaleEffect(0.7) }
-            IconButton(system: "arrow.clockwise", help: "Refresh") { store.reload() }
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 38)
+        AgentHeader(
+            icon: "terminal",
+            folder: store.projectDirectory,
+            count: store.sessions.count,
+            isLoading: store.isLoading,
+            onRefresh: { store.reload() }
+        )
     }
 }
 
@@ -130,11 +126,12 @@ private struct ClaudeCodeContent: View {
             if !store.hasProject {
                 AgentPlaceholder(
                     icon: "bubble.left.and.text.bubble.right",
-                    title: "No Claude Code sessions",
-                    detail: "Run `claude` in this directory to start one."
+                    title: "No sessions here",
+                    detail: "Run `claude` in this folder to start one."
                 )
             } else if store.sessions.isEmpty {
-                AgentPlaceholder(icon: "bubble.left", title: "No sessions", detail: "Nothing recorded here yet.")
+                AgentPlaceholder(icon: "bubble.left", title: "No sessions here",
+                                 detail: "Run `claude` in this folder to start one.")
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -163,13 +160,43 @@ private struct ClaudeCodeContent: View {
     }
 
     private var header: some View {
+        AgentHeader(
+            icon: "sparkles",
+            folder: store.projectDirectory,
+            count: store.sessions.count,
+            isLoading: false,
+            onRefresh: { store.reload() }
+        )
+    }
+}
+
+/// Shared agent header: the scoped folder name + a session count, with the
+/// provider already named by the toggle above.
+private struct AgentHeader: View {
+    @Environment(\.palette) private var palette
+    let icon: String
+    let folder: String?
+    let count: Int
+    let isLoading: Bool
+    let onRefresh: () -> Void
+
+    var body: some View {
         HStack(spacing: 8) {
-            Icon(name: "sparkles", size: 12).foregroundStyle(palette.accent)
-            Text("Claude Code")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(palette.textPrimary)
+            Icon(name: icon, size: 12).foregroundStyle(palette.accent)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(folder.map { ($0 as NSString).lastPathComponent } ?? "—")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(palette.textPrimary)
+                    .lineLimit(1)
+                if count > 0 {
+                    Text("\(count) session\(count == 1 ? "" : "s")")
+                        .font(.nxMonoSmall)
+                        .foregroundStyle(palette.textTertiary)
+                }
+            }
             Spacer(minLength: 4)
-            IconButton(system: "arrow.clockwise", help: "Refresh") { store.reload() }
+            if isLoading { ProgressView().controlSize(.small).scaleEffect(0.7) }
+            IconButton(system: "arrow.clockwise", help: "Refresh", action: onRefresh)
         }
         .padding(.horizontal, 12)
         .frame(height: 38)
@@ -198,9 +225,11 @@ private struct AgentSessionRow: View {
                 Circle()
                     .fill(isActive ? Color.green : palette.textTertiary)
                     .frame(width: 6, height: 6)
+                    // Live sessions get a soft halo so "running" reads at a glance.
+                    .shadow(color: isActive ? Color.green.opacity(0.9) : .clear, radius: 3.5)
                 Text(title)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(palette.textPrimary)
+                    .foregroundStyle(isActive ? palette.textPrimary : palette.textPrimary.opacity(0.92))
                     .lineLimit(1)
                 Spacer(minLength: 4)
                 if hovering {
