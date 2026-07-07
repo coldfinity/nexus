@@ -2179,9 +2179,8 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
     }
     
     public override func scrollWheel(with event: NSEvent) {
-        // [Nexus patch] Many mice (and precise trackpads) report motion in
-        // `scrollingDeltaY` while leaving the legacy `deltaY` at 0. Fall back to
-        // the precise delta so their scroll wheel isn't ignored.
+        // [Nexus patch] Many mice (and precise trackpads) report motion only in
+        // `scrollingDeltaY`, leaving the legacy `deltaY` at 0.
         var delta = event.deltaY
         if delta == 0 {
             delta = event.scrollingDeltaY
@@ -2189,8 +2188,36 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
         if delta == 0 {
             return
         }
+        let up = delta > 0
+
+        // [Nexus patch] When a full-screen app has enabled mouse reporting
+        // (Claude Code, opencode, etc.), forward the wheel to it as a mouse-wheel
+        // event so it scrolls its own content — the alt buffer has no scrollback.
+        if terminal.mouseMode != .off {
+            let hit = calculateMouseHit(with: event)
+            let displayBuffer = terminal.displayBuffer
+            let screenRow = max (0, min (displayBuffer.rows - 1, hit.grid.row - displayBuffer.yDisp))
+            let flags = terminal.encodeButton(button: up ? 4 : 5, release: false, shift: false, meta: false, control: false)
+            terminal.sendEvent(buttonFlags: flags, x: hit.grid.col, y: screenRow, pixelX: hit.pixels.col, pixelY: hit.pixels.row)
+            return
+        }
+
+        // [Nexus patch] Alternate buffer without mouse reporting (less, man …):
+        // send arrow keys so the pager scrolls.
+        if terminal.isCurrentBufferAlternate {
+            let seq: [UInt8]
+            if up {
+                seq = terminal.applicationCursor ? EscapeSequences.moveUpApp : EscapeSequences.moveUpNormal
+            } else {
+                seq = terminal.applicationCursor ? EscapeSequences.moveDownApp : EscapeSequences.moveDownNormal
+            }
+            for _ in 0..<3 { send(seq) }
+            return
+        }
+
+        // Normal buffer: scroll the scrollback.
         let velocity = calcScrollingVelocity(delta: max(1, Int(abs(delta))))
-        if delta > 0 {
+        if up {
             scrollUp (lines: velocity)
         } else {
             scrollDown(lines: velocity)
