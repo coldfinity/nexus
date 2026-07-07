@@ -63,6 +63,12 @@ private struct TabChip: View {
 
     var body: some View {
         HStack(spacing: 6) {
+            // Accent dot marks the active tab (matches the app's dot language);
+            // the space is reserved on every tab so titles never shift.
+            Circle()
+                .fill(isSelected ? palette.accent : .clear)
+                .frame(width: 5, height: 5)
+
             Text(title)
                 .font(.system(size: 12, weight: isSelected ? .medium : .regular))
                 .foregroundStyle(isSelected ? palette.textPrimary : palette.textSecondary)
@@ -73,7 +79,7 @@ private struct TabChip: View {
                 if hovering {
                     Button(action: onClose) {
                         Icon(name: "xmark", size: 8, weight: .bold)
-                            .foregroundStyle(palette.textSecondary)
+                            .foregroundStyle(hovering ? palette.textPrimary : palette.textSecondary)
                     }
                     .buttonStyle(.plain)
                     .help("Close tab")
@@ -90,16 +96,9 @@ private struct TabChip: View {
             RoundedRectangle(cornerRadius: NX.rowRadius)
                 .fill(isSelected ? palette.overlayStrong : (hovering ? palette.overlay : .clear))
         )
-        .overlay(alignment: .bottom) {
-            if isSelected {
-                RoundedRectangle(cornerRadius: 1)
-                    .fill(palette.accent)
-                    .frame(height: 2)
-                    .padding(.horizontal, 10)
-            }
-        }
         .contentShape(Rectangle())
         .onTapGesture(perform: onSelect)
         .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: isSelected)
     }
 }

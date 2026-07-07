@@ -167,24 +167,36 @@ struct SegmentedControl<Value: Hashable>: View {
     var body: some View {
         HStack(spacing: 4) {
             ForEach(segments, id: \.0) { value, label in
-                let isSelected = value == selection
-                Button { onSelect(value) } label: {
-                    Text(label)
-                        .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
-                        .foregroundStyle(isSelected ? palette.textPrimary : palette.textTertiary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 24)
-                        .background(
-                            RoundedRectangle(cornerRadius: NX.rowRadius)
-                                .fill(isSelected ? palette.overlayStrong : .clear)
-                        )
-                }
-                .buttonStyle(.plain)
+                SegmentButton(label: label, isSelected: value == selection) { onSelect(value) }
             }
         }
         .padding(.horizontal, 6)
         .frame(height: 34)
         .background(palette.chromeRaised)
+    }
+}
+
+private struct SegmentButton: View {
+    @Environment(\.palette) private var palette
+    let label: String
+    let isSelected: Bool
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Text(label)
+            .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+            .foregroundStyle(isSelected ? palette.textPrimary : (hovering ? palette.textSecondary : palette.textTertiary))
+            .frame(maxWidth: .infinity)
+            .frame(height: 24)
+            .background(
+                RoundedRectangle(cornerRadius: NX.rowRadius)
+                    .fill(isSelected ? palette.overlayStrong : (hovering ? palette.overlay : .clear))
+            )
+            .contentShape(Rectangle())          // whole segment is clickable, not just the text
+            .onTapGesture(perform: action)
+            .onHover { hovering = $0 }
+            .animation(.easeOut(duration: 0.12), value: isSelected)
     }
 }
 

@@ -86,11 +86,19 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 420, height: 480)
+        .tint(palette.accent)
+        .frame(width: 420, height: 500)
+        .background(SettingsWindowStyler(isDark: palette.isDark))
         .onChange(of: configStore.config) { _, newValue in
             // Pick up external edits while the window is open.
             draft = newValue
         }
+    }
+
+    /// The chrome palette derived from the currently-selected theme, so Settings
+    /// matches the app's look (and dark/light) instead of the system default.
+    private var palette: Palette {
+        Palette.from(theme: draft.theme)
     }
 
     /// A labeled row with a slider and an editable numeric field kept in sync.
@@ -203,5 +211,21 @@ private struct ThemeSwatch: View {
                 )
         )
         .contentShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+/// Sets the Settings window's appearance to match the terminal theme, so it's
+/// dark alongside a dark theme instead of following the system.
+private struct SettingsWindowStyler: NSViewRepresentable {
+    let isDark: Bool
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { view.window?.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua) }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async { nsView.window?.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua) }
     }
 }
