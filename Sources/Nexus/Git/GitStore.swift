@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import CoreServices
 
 /// Observable git state for the sidebar. Points at the repository containing a
 /// working directory (the focused pane's cwd), loads the commit graph, branches,
@@ -19,9 +20,16 @@ public final class GitStore {
     @ObservationIgnored private var directory: String?
     @ObservationIgnored private var loadTask: Task<Void, Never>?
 
+    /// Watches the repo's `.git` so the tree refreshes when you commit / switch
+    /// branches / add a worktree, without polling.
+    @ObservationIgnored private nonisolated(unsafe) var eventStream: FSEventStreamRef?
+    @ObservationIgnored private var watchedRoot: String?
+
     public var isRepository: Bool { repoRoot != nil }
 
     public init() {}
+
+    deinit { stopWatching() }
 
     /// Point the sidebar at a new working directory. No-op if unchanged.
     public func update(directory newDirectory: String?) {
@@ -64,6 +72,7 @@ public final class GitStore {
         worktrees = loadedTrees
         errorMessage = nil
         isLoading = false
+        watchGitDir(root)
     }
 
     private func clear() {
@@ -74,6 +83,51 @@ public final class GitStore {
         worktrees = []
         isLoading = false
         errorMessage = nil
+        stopWatching()
+        watchedRoot = nil
+    }
+
+    // MARK: - .git watcher
+
+    /// Start (or move) an FSEvents watcher on `root/.git`. Recursive, so it
+    /// catches nested ref/log changes; a latency window debounces multi-file
+    /// git operations into a single refresh. Our reads never write to `.git`,
+    /// so this can't feed back on itself.
+    private func watchGitDir(_ root: String) {
+        guard root != watchedRoot else { return }
+        stopWatching()
+        watchedRoot = root
+
+        let gitPath = (root as NSString).appendingPathComponent(".git")
+        var context = FSEventStreamContext(
+            version: 0,
+            info: Unmanaged.passUnretained(self).toOpaque(),
+            retain: nil, release: nil, copyDescription: nil
+        )
+        let callback: FSEventStreamCallback = { _, info, _, _, _, _ in
+            guard let info else { return }
+            let store = Unmanaged<GitStore>.fromOpaque(info).takeUnretainedValue()
+            MainActor.assumeIsolated { store.reload() }
+        }
+        guard let stream = FSEventStreamCreate(
+            kCFAllocatorDefault, callback, &context,
+            [gitPath] as CFArray,
+            FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
+            0.4,  // coalesce a burst of file changes into one refresh
+            FSEventStreamCreateFlags(kFSEventStreamCreateFlagNoDefer)
+        ) else { return }
+
+        FSEventStreamSetDispatchQueue(stream, DispatchQueue.main)
+        FSEventStreamStart(stream)
+        eventStream = stream
+    }
+
+    private nonisolated func stopWatching() {
+        guard let stream = eventStream else { return }
+        FSEventStreamStop(stream)
+        FSEventStreamInvalidate(stream)
+        FSEventStreamRelease(stream)
+        eventStream = nil
     }
 
     // MARK: - Actions
