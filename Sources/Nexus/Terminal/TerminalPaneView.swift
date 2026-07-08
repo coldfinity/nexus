@@ -25,8 +25,15 @@ struct TerminalPaneView: NSViewRepresentable {
         controller.apply(config)
         controller.startIfNeeded(directory: pane.startDirectory)
 
-        if isFocused, let window = container.window, window.firstResponder !== controller.view {
-            window.makeFirstResponder(controller.view)
+        // Make the focused pane the first responder. Deferred to the next
+        // runloop tick because during a tab switch the view isn't in a window
+        // yet when updateNSView runs, so a synchronous call would be dropped.
+        if isFocused {
+            DispatchQueue.main.async {
+                guard let window = controller.view.window,
+                      window.firstResponder !== controller.view else { return }
+                window.makeFirstResponder(controller.view)
+            }
         }
     }
 
